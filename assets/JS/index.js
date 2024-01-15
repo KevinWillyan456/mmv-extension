@@ -5,57 +5,105 @@ let videoFundo = document.getElementById("backgroundVideo");
 let telaLoading = document.querySelector(".tela_loading");
 const btnProximo = document.querySelector("#btnProximo");
 
+var tag = document.createElement("script");
+
+tag.src = "https://www.youtube.com/iframe_api";
+var firstScriptTag = document.getElementsByTagName("script")[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
 let data = [
-    "https://mmv-extension.kevinsouza456.repl.co/assets/resources/video/Devilchi.mp4",
-    "https://mmv-extension.kevinsouza456.repl.co/assets/resources/video/Jahy-Sama%20-%20Adorable.mp4",
-    "https://mmv-extension.kevinsouza456.repl.co/assets/resources/video/Light%20It%20UP.mp4",
-    "https://mmv-extension.kevinsouza456.repl.co/assets/resources/video/MMV%20-%20%20Aftermath%20-%20The%20way%20You%20Are.mp4",
-    "https://mmv-extension.kevinsouza456.repl.co/assets/resources/video/MMV%20-%20KEAN%20DYSSO%20-%20Plain%20Jane.mp4",
-    "https://mmv-extension.kevinsouza456.repl.co/assets/resources/video/MMV-%20Imanbek%20%E2%80%93%20RosesRemix.mp4",
-    "https://mmv-extension.kevinsouza456.repl.co/assets/resources/video/Never%20Letting%20Go.mp4",
-    "https://mmv-extension.kevinsouza456.repl.co/assets/resources/video/NIVERSO%20-%20Underwater%20_%20Number%202%20in%20Demon%20Realm.mp4",
+    "H9dBTyjlBKY",
+    "j-sD0d8snUI",
+    "J0vIEn0XSBA",
+    "ByaOT2wPLV4",
+    "PrqQJZWlAFE",
 ];
 
 let ultimoSorteado = -1;
+let currentVideoIndex = sortearDiferenteAnterior(data);
+let canPlay = false;
+let playerClickedBefore = false;
+let player;
+
+function onYouTubeIframeAPIReady() {
+    player = new YT.Player("player", {
+        height: 360,
+        width: 640,
+        videoId: data[currentVideoIndex],
+        playerVars: {
+            autoplay: 0,
+            controls: 0,
+            showinfo: 0,
+            rel: 0,
+            fs: 1,
+            modestbranding: 1,
+        },
+        events: {
+            onReady: onPlayerReady,
+            onStateChange: onPlayerStateChange,
+        },
+    });
+}
+
+function onPlayerReady() {
+    canPlay = true;
+
+    if (playerClickedBefore) {
+        playVideo();
+    }
+}
+
+function onPlayerStateChange(event) {
+    document.querySelector("#player").classList.remove("player-hidden");
+    document
+        .querySelector(".tela_loading")
+        .classList.add("tela_loading-Hidden");
+
+    if (event.data == YT.PlayerState.ENDED) {
+        loadNextVideo();
+    }
+}
+
+function loadNextVideo() {
+    player.loadVideoById(data[sortearDiferenteAnterior(data)]);
+}
+
+function playVideo() {
+    if (player.getPlayerState() !== YT.PlayerState.PLAYING) {
+        player.playVideo();
+    }
+}
+
+function setQuality(quality) {
+    player.setPlaybackQuality(quality);
+}
 
 btnProximo.addEventListener("click", () => {
-    nextVideo();
+    loadNextVideo();
 });
 
 buttonAcept.addEventListener("click", () => {
+    playerClickedBefore = true;
     telaBemVindo.remove();
-    ultimoSorteado = sortearDiferenteAnterior(data, ultimoSorteado);
-    videoFundo.src = data[ultimoSorteado];
-    telaLoading.classList.remove("tela_loading-Hidden");
+    document.querySelector(".cover").style.display = "block";
+    document
+        .querySelector(".container-proximo")
+        .classList.remove("tela_loading-Hidden");
+    document
+        .querySelector(".tela_loading")
+        .classList.remove("tela_loading-Hidden");
+    if (canPlay) {
+        playVideo();
+    }
 });
 
-videoFundo.addEventListener("loadeddata", () => {
-    setTimeout(() => {
-        telaLoading.classList.add("tela_loading-Hidden");
-        videoFundo.play();
-        gerenciaVideos();
-        document
-            .querySelector(".container-proximo")
-            .classList.remove("tela_loading-Hidden");
-    }, 2000);
-});
-
-function nextVideo() {
-    ultimoSorteado = sortearDiferenteAnterior(data, ultimoSorteado);
-    videoFundo.src = data[ultimoSorteado];
-    videoFundo.play();
-    gerenciaVideos();
-}
-
-function gerenciaVideos() {
-    videoFundo.addEventListener("ended", nextVideo);
-}
-
-function sortearDiferenteAnterior(array, ultimoSorteado) {
+function sortearDiferenteAnterior(array) {
     let novoSorteado;
     do {
         novoSorteado = Math.floor(Math.random() * array.length);
     } while (novoSorteado === ultimoSorteado);
+
+    ultimoSorteado = novoSorteado;
 
     return novoSorteado;
 }
